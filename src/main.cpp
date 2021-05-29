@@ -12,7 +12,7 @@ uint8_t  RX_PINS[] = {22,18,16};
 #elif 1
 #define USE_JOYSTICK
 #endif
-
+#define DEBOUNCE_TIME 1000
 #ifdef USE_KEYBOARD
 uint16_t MAP[3][3] = {{KEY_A,KEY_B,KEY_C},
                       {KEY_D,KEY_E,KEY_F},
@@ -22,6 +22,15 @@ uint8_t MAP[3][3] = {{1,2,3},
                      {4,5,6},
                      {7,8,9}};
 #endif
+uint16_t debounce_up[3][3] = {{0,0,0},
+                              {0,0,0},
+                              {0,0,0}};
+uint16_t debounce_down[3][3] = {{0,0,0},
+                                {0,0,0},
+                                {0,0,0}};
+bool keystate[3][3] = {{0,0,0},
+                       {0,0,0},
+                       {0,0,0}};
 void setup() {
   // put your setup code here, to run once:
   // set the TX pins to output and RX for input and make sure they are on pulldown mode
@@ -68,23 +77,37 @@ void loop() {
   // put your main code here, to run repeatedly:
 auto tx_iter = 0;
 for (auto tx : TX_PINS){
+
   digitalWriteFast(tx,HIGH);
   //wait until pin is high
-  delayMicroseconds(200);
+  //delayMicroseconds(10);
   auto rx_iter = 0;
   for (auto rx : RX_PINS){
     if (digitalReadFast(rx))
     {
+      if (micros() - debounce_down[rx_iter][tx_iter] > DEBOUNCE_TIME)
+      {
         set_key(MAP[rx_iter][tx_iter]);
+        
+        if (!keystate[rx_iter][tx_iter]) debounce_up[rx_iter][tx_iter] = micros();
+
+        keystate[rx_iter][tx_iter] = true;
+      }
+      
     }
     else{
+      if (micros() - debounce_up[rx_iter][tx_iter] > DEBOUNCE_TIME)
+      {
         reset_key(MAP[rx_iter][tx_iter]);
+         
+        if (keystate[rx_iter][tx_iter]) debounce_down[rx_iter][tx_iter] = micros();
+        keystate[rx_iter][tx_iter] = false;
+        
+      }
     }
     rx_iter++;
   }
   digitalWriteFast(tx,LOW);
-  //wait until pin is low
-  delayMicroseconds(200);
   tx_iter++;
   }
 #if defined(USB_SERIAL)
