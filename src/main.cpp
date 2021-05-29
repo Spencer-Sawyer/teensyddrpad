@@ -1,10 +1,27 @@
+//#define USB_HID
 #include <Arduino.h>
 uint8_t  TX_PINS[] = {23,19,17};
 uint8_t  RX_PINS[] = {22,18,16};
-uint8_t MAP[3][3] = {{KEY_A,KEY_B,KEY_C},
-                     {KEY_D,KEY_E,KEY_F},
-                     {KEY_G,KEY_H,KEY_I}};
+#if (defined(USB_KEYBOARDONLY) || defined(USB_HID) \
+ ||  defined(USB_SERIAL_HID) || defined(USB_TOUCHSCREEN) \
+ ||  defined(USB_HID_TOUCHSCREEN) || defined(USB_EVERYTHING)) \
+ && 0
+#define USE_KEYBOARD
+#elif 0
+#define USE_SERIAL
+#elif 1
+#define USE_JOYSTICK
+#endif
 
+#ifdef USE_KEYBOARD
+uint16_t MAP[3][3] = {{KEY_A,KEY_B,KEY_C},
+                      {KEY_D,KEY_E,KEY_F},
+                      {KEY_G,KEY_H,KEY_I}};
+#else
+uint8_t MAP[3][3] = {{1,2,3},
+                     {4,5,6},
+                     {7,8,9}};
+#endif
 void setup() {
   // put your setup code here, to run once:
   // set the TX pins to output and RX for input and make sure they are on pulldown mode
@@ -17,22 +34,33 @@ void setup() {
 #if defined(USB_SERIAL)
 Serial.begin(115000);
 #endif
+#if defined(USE_JOYSTICK)
+Joystick.begin();
+Joystick.useManualSend(true);
+#endif
 }
 void reset_key(u_int8_t keycode){
-  #if defined(USB_SERIAL)
+#if defined(USB_SERIAL)
 Serial.print(0xFF00 | (0xFF & keycode), HEX);
 #endif
-#if defined(USB_KEYBOARDONLY)
+#if defined(USE_KEYBOARD)
 Nkro.reset_key(keycode);
 #endif
+#if defined(USE_JOYSTICK)
+Joystick.button(keycode,false);
+#endif
+
 }
 void set_key(u_int8_t keycode)
 {
 #if defined(USB_SERIAL)
 Serial.print(keycode, HEX);
 #endif
-#if defined(USB_KEYBOARDONLY)
+#if defined(USE_KEYBOARD)
 Nkro.set_key(keycode);
+#endif
+#if defined(USE_JOYSTICK)
+Joystick.button(keycode,true);
 #endif
 
 }
@@ -63,8 +91,11 @@ for (auto tx : TX_PINS){
 Serial.println();
 delay(1000);
 #endif
-#if defined(USB_KEYBOARDONLY)
+#if defined(USE_KEYBOARD)
 Nkro.send_nkro_now();
+#endif
+#if defined(USE_JOYSTICK)
+Joystick.send_now();
 #endif
 
 }
