@@ -1,7 +1,7 @@
 //#define USB_HID
 #include <Arduino.h>
-uint8_t  TX_PINS[] = {23,19,17};
-uint8_t  RX_PINS[] = {22,18,16};
+uint8_t  RX_PINS[] = {23,21,19};
+uint8_t  TX_PINS[] = {22,20,18};
 #if (defined(USB_KEYBOARDONLY) || defined(USB_HID) \
  ||  defined(USB_SERIAL_HID) || defined(USB_TOUCHSCREEN) \
  ||  defined(USB_HID_TOUCHSCREEN) || defined(USB_EVERYTHING)) \
@@ -12,20 +12,21 @@ uint8_t  RX_PINS[] = {22,18,16};
 #elif 1
 #define USE_JOYSTICK
 #endif
+//#define debug_serial
 #define DEBOUNCE_TIME 1000
 #ifdef USE_KEYBOARD
 uint16_t MAP[3][3] = {{KEY_A,KEY_B,KEY_C},
                       {KEY_D,KEY_E,KEY_F},
                       {KEY_G,KEY_H,KEY_I}};
 #else
-uint8_t MAP[3][3] = {{1,2,3},
-                     {4,5,6},
-                     {7,8,9}};
+uint8_t MAP[3][3] = {{4,7,1},
+                     {2,8,5},
+                     {9,6,3}};
 #endif
-uint16_t debounce_up[3][3] = {{0,0,0},
+uint32_t debounce_up[3][3] = {{0,0,0},
                               {0,0,0},
                               {0,0,0}};
-uint16_t debounce_down[3][3] = {{0,0,0},
+uint32_t debounce_down[3][3] = {{0,0,0},
                                 {0,0,0},
                                 {0,0,0}};
 bool keystate[3][3] = {{0,0,0},
@@ -40,7 +41,7 @@ void setup() {
   for (auto pin : RX_PINS){
     pinMode(pin, INPUT_PULLDOWN);
   }
-#if defined(USB_SERIAL)
+#if defined(USB_SERIAL) || defined(debug_serial)
 Serial.begin(115000);
 #endif
 #if defined(USE_JOYSTICK)
@@ -80,7 +81,7 @@ for (auto tx : TX_PINS){
 
   digitalWriteFast(tx,HIGH);
   //wait until pin is high
-  //delayMicroseconds(10);
+  delayMicroseconds(10);
   auto rx_iter = 0;
   for (auto rx : RX_PINS){
     if (digitalReadFast(rx))
@@ -89,7 +90,10 @@ for (auto tx : TX_PINS){
       {
         set_key(MAP[rx_iter][tx_iter]);
         
-        if (!keystate[rx_iter][tx_iter]) debounce_up[rx_iter][tx_iter] = micros();
+        if (!keystate[rx_iter][tx_iter])
+         {
+           debounce_up[rx_iter][tx_iter] = micros();
+         }
 
         keystate[rx_iter][tx_iter] = true;
       }
@@ -100,10 +104,17 @@ for (auto tx : TX_PINS){
       {
         reset_key(MAP[rx_iter][tx_iter]);
          
-        if (keystate[rx_iter][tx_iter]) debounce_down[rx_iter][tx_iter] = micros();
+        if (keystate[rx_iter][tx_iter]) 
+        {
+          debounce_down[rx_iter][tx_iter] = micros();
+        }
         keystate[rx_iter][tx_iter] = false;
         
       }
+      #if defined(debug_serial)
+      Serial.println(debounce_down[rx_iter][tx_iter]);
+      #endif
+
     }
     rx_iter++;
   }
