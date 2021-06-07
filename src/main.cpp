@@ -1,4 +1,7 @@
-//#define USB_HID
+/* 
+READ ME: 
+Be sure to define USB_HID, USB_KEYBOARDONLY, et al. and one of the options defined below
+*/
 #include <Arduino.h>
 uint8_t  RX_PINS[] = {23,21,19};
 uint8_t  TX_PINS[] = {22,20,18};
