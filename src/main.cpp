@@ -2,6 +2,7 @@
 #include <Arduino.h>
 uint8_t  RX_PINS[] = {23,21,19};
 uint8_t  TX_PINS[] = {22,20,18};
+/*
 #if (defined(USB_KEYBOARDONLY) || defined(USB_HID) \
  ||  defined(USB_SERIAL_HID) || defined(USB_TOUCHSCREEN) \
  ||  defined(USB_HID_TOUCHSCREEN) || defined(USB_EVERYTHING)) \
@@ -11,17 +12,19 @@ uint8_t  TX_PINS[] = {22,20,18};
 #define USE_SERIAL
 #elif 1
 #define USE_JOYSTICK
-#endif
+#endif*/
 //#define debug_serial
-#define DEBOUNCE_TIME 1000
+#define ms 1000
+#define s 1000000
+#define DEBOUNCE_TIME 50*ms
 #ifdef USE_KEYBOARD
 uint16_t MAP[3][3] = {{KEY_A,KEY_B,KEY_C},
                       {KEY_D,KEY_E,KEY_F},
                       {KEY_G,KEY_H,KEY_I}};
 #else
 uint8_t MAP[3][3] = {{4,7,1},
-                     {2,8,5},
-                     {9,6,3}};
+                     {2,9,5},
+                     {8,6,3}};
 #endif
 uint32_t debounce_up[3][3] = {{0,0,0},
                               {0,0,0},
