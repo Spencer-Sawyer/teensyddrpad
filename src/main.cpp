@@ -14,9 +14,10 @@ uint8_t  TX_PINS[] = {22,20,18};
 #define USE_JOYSTICK
 #endif*/
 //#define debug_serial
-#define ms 1000
-#define s 1000000
-#define DEBOUNCE_TIME 50*ms
+#define ms (1000)
+#define s (1000000)
+#define DEBOUNCE_TIME (50*ms)
+#define PIN_CHANGE_STATE_TIME (10) /*microseconds*/
 #ifdef USE_KEYBOARD
 uint16_t MAP[3][3] = {{KEY_A,KEY_B,KEY_C},
                       {KEY_D,KEY_E,KEY_F},
@@ -84,7 +85,7 @@ for (auto tx : TX_PINS){
 
   digitalWriteFast(tx,HIGH);
   //wait until pin is high
-  delayMicroseconds(10);
+  delayMicroseconds(PIN_CHANGE_STATE_TIME);
   auto rx_iter = 0;
   for (auto rx : RX_PINS){
     if (digitalReadFast(rx))
